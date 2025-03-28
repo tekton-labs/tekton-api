@@ -39,8 +39,8 @@ info:
     url: 'https://opensource.org/license/MIT'
     identifier: MIT
 security:
-  - session_cookie:
-  - authorization_header:
+  - session_cookie: []
+  - authorization_header: []
 tags:
   - name: auth
     x-displayName: Auth
