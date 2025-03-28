@@ -1,0 +1,23 @@
+{
+  "name": "tekton-api",
+  "description": "Tekton API documentation in OpenAPI format",
+  "scripts": {
+    "build": "redocly build-docs openapi.yaml",
+    "lint": "redocly lint openapi.yaml"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tekton-labs/tekton-api.git"
+  },
+  "keywords": [
+    "openapi"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tekton-labs/tekton-api/issues"
+  },
+  "homepage": "https://github.com/tekton-labs/tekton-api#readme",
+  "dependencies": {
+    "@redocly/cli": "^1.34.0"
+  }
+}

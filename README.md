@@ -5,6 +5,14 @@ Tekton API documentation in OpenAPI format.
 
 ## Getting started
 
+Build static HTML page:
+
 ```sh
-npx @redocly/cli build-docs openapi.yaml
+npm run build
+```
+
+Lint:
+
+```sh
+npm run lint
 ```
