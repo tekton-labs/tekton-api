@@ -57,6 +57,7 @@ x-tagGroups:
 paths:
   /auth/session/:
     post:
+      operationId: getSessionInfo
       tags: ["auth"]
       summary: Get session information
       description: >
@@ -75,6 +76,7 @@ paths:
                 $ref: "#/components/schemas/Session"
   /auth/signup/:
     post:
+      operationId: signup
       tags: ["auth"]
       summary: Sign up
       requestBody:
@@ -94,6 +96,7 @@ paths:
           description: Email is taken
   /auth/login/:
     post:
+      operationId: login
       tags: ["auth"]
       summary: Log in
       requestBody:
@@ -113,6 +116,7 @@ paths:
           description: Wrong credentials
   /auth/logout/:
     post:
+      operationId: logout
       tags: ["auth"]
       summary: Log out
       responses:
@@ -120,6 +124,7 @@ paths:
           description: Successfully logged out.
   /auth/profile/:
     get:
+      operationId: getProfileInfo
       tags: ["auth"]
       summary: Get profile information
       responses:
@@ -133,6 +138,7 @@ paths:
           description: Unauthorized
   /products/:
     get:
+      operationId: getProducts
       tags: ["products"]
       summary: Get a list of all products
       parameters:
@@ -159,6 +165,7 @@ paths:
                 $ref: "#/components/schemas/ProductList"
   /products/{productId}/:
     get:
+      operationId: getProduct
       tags: ["products"]
       summary: Get product information
       parameters:
@@ -180,6 +187,7 @@ paths:
           description: Product not found
   /properties/:
     get:
+      operationId: getProperties
       tags: ["products"]
       summary: Get descriptions of all properties.
       description: >
@@ -193,6 +201,7 @@ paths:
                 $ref: "#/components/schemas/ProductPropertySchemaList"
   /cart/:
     get:
+      operationId: getCartInfo
       tags: ["cart"]
       summary: Get items from cart
       responses:
@@ -203,6 +212,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Cart"
     post:
+      operationId: updateCartItem
       tags: ["cart"]
       summary: Change quantity of items in cart
       requestBody:
@@ -240,6 +250,7 @@ paths:
                     example: 1
   /cart/product/{productId}/:
     get:
+      operationId: getProductQuantityInCart
       tags: ["cart"]
       summary: Get the quantity of product in the cart
       description: >
@@ -269,6 +280,7 @@ paths:
                     format: int64
   /cart/cost/:
     get:
+      operationId: getTotalCartCost
       tags: ["cart"]
       summary: Get the cost of the items in the cart.
       responses:
@@ -283,6 +295,7 @@ paths:
                     $ref: "#/components/schemas/Price"
   /cart/checkout/:
     post:
+      operationId: checkout
       tags: ["cart"]
       summary: Checkout
       description: Places an order with all current items in the cart.
