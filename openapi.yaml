@@ -1,0 +1,512 @@
+openapi: 3.1.0
+servers:
+  - url: https://tekton59.ru/api
+    description: Default server
+info:
+  description: |
+    Tekton is a lumber store in Perm.
+    This is an early version of the store API, it may be changed in the future.
+   
+
+    # Sessions
+    
+    Even if you are not logged in, we ask you to obtain a session key and pass it on with every request.
+    The server can store data that is tied to a session (for example: a list of items in a shopping cart).
+    If the session is authorized, this data will be linked not to the session, but to the account.
+
+    Tekton supports 2 ways to send session information:
+    - Based on `sessionid` cookie
+    - Based on `Authorization` header
+
+    <SecurityDefinitions />
+
+
+    # CSRF
+
+    To protect against CSRF attacks, the API server requires sending the same token
+    in the `csrftoken` cookie and in the `X-CSRFToken` header for `POST`, `PUT`, `PATCH`, and `DELETE` requests.
+
+    You can generate a random token, but its length must be exactly 32 characters. The token value itself does not matter.
+
+  version: 1.0.0
+  title: Tekton API
+  contact:
+    name: API support
+    email: dev@tekton59.ru
+    url: https://github.com/tekton-labs/tekton-api
+  license:
+    name: MIT
+    url: 'https://opensource.org/license/MIT'
+    identifier: MIT
+security:
+  - session_cookie:
+  - authorization_header:
+tags:
+  - name: auth
+    x-displayName: Auth
+  - name: products
+    x-displayName: Products
+  - name: cart
+    x-displayName: Cart
+x-tagGroups:
+  - name: API
+    tags:
+      - auth
+      - products
+      - cart
+paths:
+  /auth/session/:
+    post:
+      tags: ["auth"]
+      summary: Get session information
+      description: >
+        You can use this method without providing an existing session.
+        The server always returns a valid session.
+        If the current session has expired, it will be replaced.
+
+        Try to use the received session key in all subsequent requests,
+        even if you do not have an account or authorization is not required for the endpoint.
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+  /auth/signup/:
+    post:
+      tags: ["auth"]
+      summary: Sign up
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+        required: true
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewSession"
+        "400":
+          description: Email is taken
+  /auth/login/:
+    post:
+      tags: ["auth"]
+      summary: Log in
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+        required: true
+      responses:
+        "200":
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewSession"
+        "403":
+          description: Wrong credentials
+  /auth/logout/:
+    post:
+      tags: ["auth"]
+      summary: Log out
+      responses:
+        "204":
+          description: Successfully logged out.
+  /auth/profile/:
+    get:
+      tags: ["auth"]
+      summary: Get profile information
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "403":
+          description: Unauthorized
+  /products/:
+    get:
+      tags: ["products"]
+      summary: Get a list of all products
+      parameters:
+        - name: limit
+          in: query
+          description: Limit on the number of results
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: offset
+          in: query
+          description: The number of elements skipped from the start
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductList"
+  /products/{productId}/:
+    get:
+      tags: ["products"]
+      summary: Get product information
+      parameters:
+        - name: productId
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Product not found
+  /properties/:
+    get:
+      tags: ["products"]
+      summary: Get descriptions of all properties.
+      description: >
+        Each product property has its own scheme. Use this method to get a list of available properties.
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductPropertySchemaList"
+  /cart/:
+    get:
+      tags: ["cart"]
+      summary: Get items from cart
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+    post:
+      tags: ["cart"]
+      summary: Change quantity of items in cart
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId:
+                  type: integer
+                  format: int64
+                quantity:
+                  type: integer
+                  format: int64
+                  description: >
+                    Change in quantity of product in the cart. Can be negative.
+                    The value is added to the current quantity of the product.
+                    If the new value is less than or equal to 0, the item record is removed from the cart.
+                  example: 1
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productId:
+                    type: integer
+                    format: int64
+                  quantity:
+                    type: integer
+                    format: int64
+                    description: The number of product in the cart after the change.
+                    example: 1
+  /cart/product/{productId}/:
+    get:
+      tags: ["cart"]
+      summary: Get the quantity of product in the cart
+      description: >
+        The method allows you to find out the quantity of product in the cart.
+        Works for any products, even for those that were not added to the cart.
+      parameters:
+        - name: productId
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productId:
+                    type: integer
+                    format: int64
+                  quantity:
+                    type: integer
+                    format: int64
+  /cart/cost/:
+    get:
+      tags: ["cart"]
+      summary: Get the cost of the items in the cart.
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalCost:
+                    $ref: "#/components/schemas/Price"
+  /cart/checkout/:
+    post:
+      tags: ["cart"]
+      summary: Checkout
+      description: Places an order with all current items in the cart.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  example: Ivan
+                lastName:
+                  type: string
+                  example: Petrov
+                phoneNumber:
+                  type: string
+                  example: "88005553535"
+                deliveryAddress:
+                  type: string
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+components:
+  schemas:
+    Session:
+      type: object
+      properties:
+        sessionKey:
+          type: string
+          example: "long-random-string"
+        isAuthenticated:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+          description: >
+            Session expiration date.
+            It can be automatically extended by sending requests with the session key.
+    Credentials:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    NewSession:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Your new session key.
+        expiry:
+          type: string
+          format: date-time
+          description: >
+            Session expiration date.
+            It can be automatically extended by sending requests with the session key.
+    Profile:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+          format: email
+    ProductList:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int64
+          example: 1
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompactProduct"
+    CompactProduct:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        price:
+          $ref: "#/components/schemas/Price"
+        img:
+          type: ["null", string]
+          format: uri
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+          example: "Product 1"
+        price:
+          $ref: "#/components/schemas/Price"
+        description:
+          type: string
+          description: Product description with HTML tags
+          example: "<p>Lorem ipsum</p>"
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductImage"
+        properties:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductProperty"
+    ProductImage:
+      type: object
+      properties:
+        img:
+          type: string
+          format: uri
+    ProductProperty:
+      type: object
+      properties:
+        schema:
+          $ref: "#/components/schemas/ProductPropertySchema"
+        value:
+          type: string
+          example: "2"
+    ProductPropertySchema:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          example: "Width, m"
+    ProductPropertySchemaList:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int64
+          example: 1
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductPropertySchema"
+    Price:
+      type: string
+      format: decimal
+      example: "123.45"
+    Cart:
+      type: object
+      properties:
+        cart:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+        totalCost:
+          $ref: "#/components/schemas/Price"
+    CartItem:
+      type: object
+      properties:
+        product:
+          $ref: "#/components/schemas/CompactProduct"
+        quantity:
+          type: integer
+          format: int64
+          example: 1
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "order-id"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        firstName:
+          type: string
+          example: Ivan
+        lastName:
+          type: string
+          example: Petrov
+        phoneNumber:
+          type: string
+          example: "88005553535"
+        deliveryAddress:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    OrderItem:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Product 1"
+        price:
+          $ref: "#/components/schemas/Price"
+        quantity:
+          type: integer
+          format: int64
+          example: 1
+  securitySchemes:
+    session_cookie:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    authorization_header:
+      description: >
+        Prefix your token with `Session`. For example: `Authorization: Session your-token`.
+      type: apiKey
+      in: header
+      name: Authorization
