@@ -5,6 +5,12 @@ Tekton API documentation in OpenAPI format.
 
 ## Getting started
 
+Install dependencies:
+
+```sh
+npm install
+```
+
 Build static HTML page:
 
 ```sh
